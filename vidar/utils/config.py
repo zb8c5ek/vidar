@@ -191,6 +191,7 @@ def load_class(filename, paths, concat=True, methodname=None):
     # for each path in paths
     for path in make_list(paths):
         # Create full path
+        path = path.replace('\\', '/')
         path = path.replace('/', '.')
         full_path = '{}.{}'.format(path, filename) if concat else path
         # Get module

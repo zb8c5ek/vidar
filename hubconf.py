@@ -10,7 +10,7 @@ from vidar.core.evaluator import Evaluator
 from vidar.utils.config import read_config
 from vidar.utils.setup import setup_arch, setup_network
 
-
+from pathlib import Path
 def DeFiNe(pretrained=True, **kwargs):
     """
     DeFiNe model for monocular depth estimation
@@ -83,16 +83,23 @@ def ZeroDepth(pretrained=True, **kwargs):
     """
 
     cfg_url = "https://raw.githubusercontent.com/TRI-ML/vidar/main/configs/papers/zerodepth/hub_zerodepth.yaml"
-    cfg = urllib.request.urlretrieve(cfg_url, "zerodepth_config.yaml")
-    cfg = read_config("zerodepth_config.yaml")
-    model = Evaluator(cfg)
+    # cfg = urllib.request.urlretrieve(cfg_url, "zerodepth_config.yaml")
+    cfg = read_config("configs/papers/zerodepth/hub_zerodepth.yaml")
+    # model = Evaluator(cfg)
     model = setup_network(cfg.networks.perceiver)
     model.eval()
 
     if pretrained:
-        url = "https://tri-ml-public.s3.amazonaws.com/github/vidar/models/ZeroDepth_unified.ckpt"
-        state_dict = torch.hub.load_state_dict_from_url(url, map_location="cpu")
-        state_dict =  {k.replace("module.networks.define.", ""): v for k, v in state_dict["state_dict"].items()}
+        fp_model = Path("models/ZeroDepth_unified.ckpt").resolve()
+        if fp_model.is_file():
+            state_dict = torch.load(fp_model, map_location="cpu")
+            state_dict = {k.replace("module.networks.define.", ""): v for k, v in state_dict["state_dict"].items()}
+        else:
+            url = "https://tri-ml-public.s3.amazonaws.com/github/vidar/models/ZeroDepth_unified.ckpt"
+            # state_dict = torch.hub.load_state_dict_from_url(url, map_location="cpu")
+            state_dict = torch.hub.load_state_dict_from_url(url)
+            state_dict =  {k.replace("module.networks.define.", ""): v for k, v in state_dict["state_dict"].items()}
+            raise Warning("File at: C:/Users\Xuanli\.cache/torch\hub\checkpoints ; move it to models")
         model.load_state_dict(state_dict, strict=True)
 
     return model
